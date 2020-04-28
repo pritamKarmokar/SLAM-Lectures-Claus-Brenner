@@ -29,7 +29,6 @@ def get_corresponding_points_on_wall(points,
     left_list = []
     right_list = []
 
-    # ---> Implement your code here.
     for i in range(len(points)):
         if abs(points[i][0] - arena_left) < eps:
             left_list.append(points[i])
@@ -40,7 +39,7 @@ def get_corresponding_points_on_wall(points,
         elif abs(points[i][1] - arena_bottom) < eps:
             left_list.append(points[i])
             right_list.append((points[i][0], arena_bottom))
-        elif abs(points[i][0] - arena_top) < eps:
+        elif abs(points[i][1] - arena_top) < eps:
             left_list.append(points[i])
             right_list.append((points[i][0], arena_top))
 

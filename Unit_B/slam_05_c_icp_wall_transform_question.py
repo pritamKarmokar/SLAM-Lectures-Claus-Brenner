@@ -40,7 +40,7 @@ def get_icp_transform(world_points, iterations):
 
      overall_trafo = (1.0, 1.0, 0.0, 0.0, 0.0)
 
-     for i in range(iterations):
+     for _ in range(iterations):
           points = [apply_transform(overall_trafo, p) for p in world_points]
           
           left, right = get_corresponding_points_on_wall(points)

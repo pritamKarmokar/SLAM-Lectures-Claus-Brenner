@@ -3,6 +3,7 @@
 # Write the result to a file which contains all cylinders, for all scans.
 # 04_a_project_landmarks
 # Claus Brenner, 14 NOV 2012
+
 from lego_robot import *
 from slam_b_library import filter_step, compute_derivative,\
      find_cylinders, compute_cartesian_coordinates
@@ -23,10 +24,6 @@ def write_cylinders(file_desc, line_header, cylinder_list):
         line += f' {c[0]:.1f} {c[1]:.1f}'
     file_desc.write(line + '\n')
 
-    # print >> file_desc, line_header,
-    # for c in cylinder_list:
-    #     print >> file_desc, "%.1f %.1f" % c,
-    # print >> file_desc
 
 if __name__ == '__main__':
     # The constants we used for the filter_step.
@@ -65,10 +62,10 @@ if __name__ == '__main__':
         # Write results to file.
         # The pose.
         out_file.write(f'F {pose[0]} {pose[1]} {pose[2]}\n')
-        # print >> out_file, "F %f %f %f" % pose
 
         # The detected cylinders in the scanner's coordinate system.
         write_cylinders(out_file, "D C", cartesian_cylinders)
+        
         # The detected cylinders in the world coordinate system.
         write_cylinders(out_file, "W C", world_cylinders)
 

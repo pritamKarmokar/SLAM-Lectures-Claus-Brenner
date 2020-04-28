@@ -31,7 +31,6 @@ def distance(a,b):
 def find_cylinder_pairs(cylinders, reference_cylinders, max_radius):
     cylinder_pairs = []
     paired = [0 for i in range(len(cylinders))]
-    # --->>> Insert here your code from the last question,
     # slam_04_b_find_cylinder_pairs.
     for j, c in enumerate(reference_cylinders):
         dist = max_radius        
@@ -73,10 +72,10 @@ def estimate_transform(left_list, right_list, fix_scale = False):
 
     lc = compute_center(left_list)
     rc = compute_center(right_list)
-    l_print(f'Left list: {left_list}')
-    l_print(f'Left center: {lc}')
-    l_print(f'Right list: {right_list}')
-    l_print(f'Right center: {rc}')
+    # l_print(f'Left list: {left_list}')
+    # l_print(f'Left center: {lc}')
+    # l_print(f'Right list: {right_list}')
+    # l_print(f'Right center: {rc}')
 
     # --->>> Insert here your code to compute lambda, c, s and tx, ty.
     cs, ss, rr, ll = 0.0, 0.0, 0.0, 0.0
@@ -86,7 +85,7 @@ def estimate_transform(left_list, right_list, fix_scale = False):
         ry = (right_list[i][1] - rc[1])
         lx = (left_list[i][0] - lc[0])
         ly = (left_list[i][1] - lc[1])
-        l_print(f'\trx: {rx:0.1f}, ry: {ry:0.1f}, lx: {lx:0.1f}, ly: {ly:0.1f}')
+        # l_print(f'\trx: {rx:0.1f}, ry: {ry:0.1f}, lx: {lx:0.1f}, ly: {ly:0.1f}')
         
         cs += rx * lx + ry * ly
         ss += -rx * ly + ry * lx
@@ -97,12 +96,12 @@ def estimate_transform(left_list, right_list, fix_scale = False):
 
     la = (rr / ll)**0.5 if not fix_scale else 1.0
     len_cs_ss = (cs**2 + ss**2)**0.5
-    l_print(f'cs: {cs:0.1f}, ss: {ss:0.1f}, rr: {rr:0.1f}, ll: {ll:0.1f}, len_cs_ss: {len_cs_ss:0.1f}')
+    # l_print(f'cs: {cs:0.1f}, ss: {ss:0.1f}, rr: {rr:0.1f}, ll: {ll:0.1f}, len_cs_ss: {len_cs_ss:0.1f}')
     c = cs / len_cs_ss
     s = ss / len_cs_ss
     tx = rc[0] - la * (c * lc[0] - s * lc[1])
     ty = rc[1] - la * (s * lc[0] + c * lc[1])
-    l_print(f'estimated transform ==> la: {la:0.1f}, c: {c:0.1f}, s: {s:0.1f}, tx: {tx:0.1f}, ty: {ty:0.1f}')
+    # l_print(f'estimated transform ==> la: {la:0.1f}, c: {c:0.1f}, s: {s:0.1f}, tx: {tx:0.1f}, ty: {ty:0.1f}')
     return la, c, s, tx, ty
 
 # Given a similarity transformation:
@@ -126,7 +125,7 @@ def correct_pose(pose, trafo):
     theta = atan2(trafo[2], trafo[1])
     new_heading = pose[2] + theta
 
-    l_print(f'pose: {pose}, new_pose: {(new_pose[0], new_pose[1], new_heading)}')
+    # l_print(f'pose: {pose}, new_pose: {(new_pose[0], new_pose[1], new_heading)}')
 
     return ((new_pose[0], new_pose[1], new_heading)) #(pose[0], pose[1], pose[2])  # Replace this by the corrected pose.
 
