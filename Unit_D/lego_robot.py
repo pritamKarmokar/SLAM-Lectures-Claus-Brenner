@@ -164,8 +164,8 @@ class LegoLogfile(object):
                     if first_world_cylinders:
                         self.world_cylinders = []
                         first_world_cylinders = False
-                    cyl = map(float, sp[2:])
-                    self.world_cylinders.append([(cyl[2*i], cyl[2*i+1]) for i in range(len(cyl)/2)])
+                    cyl = list(map(float, sp[2:]))
+                    self.world_cylinders.append([(cyl[2*i], cyl[2*i+1]) for i in range(len(cyl)//2)])
 
         f.close()
 

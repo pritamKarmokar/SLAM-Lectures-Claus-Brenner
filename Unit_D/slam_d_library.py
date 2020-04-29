@@ -8,15 +8,15 @@ from lego_robot import LegoLogfile
 # Line header defines the start of each line, e.g. "D C" for a detected
 # cylinder or "W C" for a world cylinder.
 def write_cylinders(file_desc, line_header, cylinder_list):
-    print >> file_desc, line_header,
+    file_desc.write(f'{line_header} ')
     for c in cylinder_list:
-        print >> file_desc, "%.1f %.1f" % c,
-    print >> file_desc
+        file_desc.write(f"{c[0]:0.1f} {c[1]:.1f} ")
+    file_desc.write('\n')
 
 # Find the derivative in scan data, ignoring invalid measurements.
 def compute_derivative(scan, min_dist):
     jumps = [ 0 ]
-    for i in xrange(1, len(scan) - 1):
+    for i in range(1, len(scan) - 1):
         l = scan[i-1]
         r = scan[i+1]
         if l > min_dist and r > min_dist:
@@ -34,7 +34,7 @@ def find_cylinders(scan, scan_derivative, jump, min_dist):
     on_cylinder = False
     sum_ray, sum_depth, rays = 0.0, 0.0, 0
 
-    for i in xrange(len(scan_derivative)):
+    for i in range(len(scan_derivative)):
         if scan_derivative[i] < -jump:
             # Start a new cylinder, independent of on_cylinder.
             on_cylinder = True

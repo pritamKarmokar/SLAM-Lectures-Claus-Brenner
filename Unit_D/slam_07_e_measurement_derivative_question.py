@@ -30,7 +30,27 @@ class ExtendedKalmanFilter:
         # x_m y_m is landmark[0] landmark[1]
         # The Jacobian of h is a 2x3 matrix.
 
-        return array([[1, 2, 3], [4, 5, 6]]) # Replace this.
+        # compute some variables for convenience
+        x, y, theta = state        
+        d = scanner_displacement
+        x_m, y_m = landmark
+
+        x_l = x + d * cos(theta)
+        y_l = y + d * sin(theta)
+        delta_x = x_m - x_l
+        delta_y = y_m - y_l
+        q = (x_m - x_l)**2 + (y_m - y_l)**2
+
+        # compute H
+        H11 = -delta_x / sqrt(q)
+        H12 = -delta_y / sqrt(q)
+        H13 = (d / sqrt(q)) * (delta_x * sin(theta) - delta_y * cos(theta))
+
+        H21 = delta_y / q
+        H22 = -delta_x / q
+        H23 = (-d / q) * (delta_x * cos(theta) + delta_y * sin(theta)) - 1
+ 
+        return array([[H11, H12, H13], [H21, H22, H23]]) 
 
 
 if __name__ == '__main__':
@@ -48,7 +68,7 @@ if __name__ == '__main__':
     w = 150.0
 
     # Compute derivative numerically.
-    print "Numeric differentiation dx, dy, dtheta:"
+    print ("Numeric differentiation dx, dy, dtheta:")
     delta = 1e-7
     state_x = array([x + delta, y, theta])
     state_y = array([x, y + delta, theta])
@@ -60,16 +80,16 @@ if __name__ == '__main__':
     dh_dtheta = (ExtendedKalmanFilter.h(state_theta, landmark, scanner_displacement) -\
                  ExtendedKalmanFilter.h(state, landmark, scanner_displacement)) / delta
     dh_dstate_numeric = column_stack([dh_dx, dh_dy, dh_dtheta])
-    print dh_dstate_numeric
+    print (dh_dstate_numeric)
 
     # Use the above code to compute the derivative analytically.
-    print "Analytic differentiation dx, dy, dtheta:"
+    print ("Analytic differentiation dx, dy, dtheta:")
     dh_dstate_analytic = ExtendedKalmanFilter.dh_dstate(
         state, landmark, scanner_displacement)
-    print dh_dstate_analytic
+    print (dh_dstate_analytic)
 
     # The difference should be close to zero (depending on the setting of
     # delta, above).
-    print "Difference:"
-    print dh_dstate_numeric - dh_dstate_analytic
-    print "Seems correct:", allclose(dh_dstate_numeric, dh_dstate_analytic)
+    print ("Difference:")
+    print (dh_dstate_numeric - dh_dstate_analytic)
+    print ("Seems correct:", allclose(dh_dstate_numeric, dh_dstate_analytic))

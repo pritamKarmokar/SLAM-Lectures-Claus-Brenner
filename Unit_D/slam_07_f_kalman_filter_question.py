@@ -46,13 +46,66 @@ class ExtendedKalmanFilter:
     def dg_dstate(state, control, w):
 
         # --->>> Put your method from 07_d_kalman_predict here.
-        pass # Remove this.
+        theta = state[2]
+        l, r = control
+        
+        # compute alpha and R
+        alpha = (r-l) / w
+
+        if r != l:
+
+            R = l / alpha
+            # compute required elements of the G matrix
+            G12 = (R + w/2)*(cos(theta + alpha) - cos(theta))
+            G22 = (R + w/2)*(sin(theta + alpha) - sin(theta))
+
+        else:
+
+            # This is for the special case r == l.
+            # compute required elements of the G matrix
+            G12 = -l * sin(theta)
+            G22 = l * cos(theta)
+
+        m = array([[1, 0, G12], [0, 1, G22], [0, 0, 1]])  
+
+        return m
 
     @staticmethod
     def dg_dcontrol(state, control, w):
 
         # --->>> Put your method from 07_d_kalman_predict here.
-        pass # Remove this.
+        theta = state[2]
+        l, r = tuple(control)
+        alpha = (r-l) / w
+
+        if r != l:
+
+            # This is for the case l != r.
+            # Note g has 3 components and control has 2, so the result
+            # will be a 3x2 (rows x columns) matrix.
+            V11 = ((w*r) / ((r-l)**2)) * (sin(theta+alpha) - sin(theta))  - ((r+l) / (2*(r-l))) * cos(theta+alpha)
+            V21 = ((w*r) / ((r-l)**2)) * (-cos(theta+alpha) + cos(theta)) - ((r+l) / (2*(r-l))) * sin(theta+alpha)
+            
+            V12 = -((w*l) / ((r-l)**2)) * (sin(theta+alpha) - sin(theta))  + ((r+l) / (2*(r-l))) * cos(theta+alpha)
+            V22 = -((w*l) / ((r-l)**2)) * (-cos(theta+alpha) + cos(theta)) + ((r+l) / (2*(r-l))) * sin(theta+alpha)
+            
+        else:
+
+            # This is for the special case l == r.
+            V11 = (1/2) * (cos(theta) + (l/w) * sin(theta))            
+            V21 = (1/2) * (sin(theta) - (l/w) * cos(theta)) 
+
+            V12 = (1/2) * (cos(theta) - (l/w) * sin(theta))            
+            V22 = (1/2) * (sin(theta) + (l/w) * cos(theta)) 
+
+
+        # dg3_dl and dg3_dr are same for both cases
+        V31 = -1 / w
+        V32 = 1 / w
+
+        m = array([[V11, V12], [V21, V22], [V31, V32]])  
+            
+        return m
 
     @staticmethod
     def get_error_ellipse(covariance):
@@ -68,7 +121,23 @@ class ExtendedKalmanFilter:
     def predict(self, control):
 
         # --->>> Put your method from 07_d_kalman_predict here.
-        pass # Remove this.
+        left, right = control
+
+        # compute control variance matrix
+        sigma_l = (self.control_motion_factor * left)**2 + (self.control_turn_factor * (left-right))**2
+        sigma_r = (self.control_motion_factor * right)**2 + (self.control_turn_factor * (left-right))**2
+        control_covariance = diag([sigma_l, sigma_r])
+        
+        # compute G and V
+        G = self.dg_dstate(self.state, control, self.robot_width)
+        V = self.dg_dcontrol(self.state, control, self.robot_width)
+
+        # computing new covariance matrix
+        self.covariance = dot(dot(G, self.covariance), G.T) + dot(dot(V, control_covariance), V.T)
+
+        # state' = g(state, control)
+        self.state = self.g(self.state, control, self.robot_width)
+
 
     @staticmethod
     def h(state, landmark, scanner_displacement):
@@ -85,7 +154,28 @@ class ExtendedKalmanFilter:
     def dh_dstate(state, landmark, scanner_displacement):
 
         # --->>> Put your method from 07_e_measurement derivative here.
-        pass # Remove this.
+        # compute some variables for convenience
+        x, y, theta = state        
+        d = scanner_displacement
+        x_m, y_m = landmark
+
+        x_l = x + d * cos(theta)
+        y_l = y + d * sin(theta)
+        delta_x = x_m - x_l
+        delta_y = y_m - y_l
+        q = (x_m - x_l)**2 + (y_m - y_l)**2
+
+        # compute H
+        H11 = -delta_x / sqrt(q)
+        H12 = -delta_y / sqrt(q)
+        H13 = (d / sqrt(q)) * (delta_x * sin(theta) - delta_y * cos(theta))
+
+        H21 = delta_y / q
+        H22 = -delta_x / q
+        H23 = (-d / q) * (delta_x * cos(theta) + delta_y * sin(theta)) - 1
+ 
+        return array([[H11, H12, H13], [H21, H22, H23]]) 
+
 
     def correct(self, measurement, landmark):
         """The correction step of the Kalman filter."""
@@ -114,7 +204,22 @@ class ExtendedKalmanFilter:
         # linalg.inv(A) returns the inverse of A (A itself is not modified).
         # eye(3) returns a 3x3 identity matrix.
 
-        pass # Remove this.
+        # compute H and Q
+        H = self.dh_dstate(self.state, landmark, self.scanner_displacement)
+        Q = diag([self.measurement_distance_stddev**2, self.measurement_angle_stddev**2])
+
+        # compute Kalman Gain
+        K = dot(dot(self.covariance, H.T), linalg.inv(dot(dot(H, self.covariance), H.T) + Q))
+
+        # compute innovation (as suggested)
+        innovation = array(measurement) - self.h(self.state, landmark, self.scanner_displacement)
+        innovation[1] = (innovation[1] + pi) % (2*pi) - pi
+
+        # update state and covariance
+        self.state = self.state + dot(K, innovation)
+        self.covariance = dot((eye(3) - dot(K, H)), self.covariance)
+
+
 
 if __name__ == '__main__':
     # Robot constants.
@@ -158,7 +263,7 @@ if __name__ == '__main__':
     states = []
     covariances = []
     matched_ref_cylinders = []
-    for i in xrange(len(logfile.motor_ticks)):
+    for i in range(len(logfile.motor_ticks)):
         # Prediction.
         control = array(logfile.motor_ticks[i]) * ticks_to_mm
         kf.predict(control)
@@ -169,7 +274,7 @@ if __name__ == '__main__':
             depth_jump, minimum_valid_distance, cylinder_offset,
             kf.state, scanner_displacement,
             reference_cylinders, max_cylinder_distance)
-        for j in xrange(len(observations)):
+        for j in range(len(observations)):
             kf.correct(*observations[j])
 
         # Log state, covariance, and matched cylinders for later output.
@@ -179,15 +284,16 @@ if __name__ == '__main__':
 
     # Write all states, all state covariances, and matched cylinders to file.
     f = open("kalman_prediction_and_correction.txt", "w")
-    for i in xrange(len(states)):
+    for i in range(len(states)):
         # Output the center of the scanner, not the center of the robot.
-        print >> f, "F %f %f %f" % \
-            tuple(states[i] + [scanner_displacement * cos(states[i][2]),
-                               scanner_displacement * sin(states[i][2]),
-                               0.0])
+        t = tuple(states[i] + [scanner_displacement * cos(states[i][2]),
+                            scanner_displacement * sin(states[i][2]),
+                            0.0])
+        f.write(f"F {t[0]} {t[1]} {t[2]}\n")
         # Convert covariance matrix to angle stddev1 stddev2 stddev-heading form
         e = ExtendedKalmanFilter.get_error_ellipse(covariances[i])
-        print >> f, "E %f %f %f %f" % (e + (sqrt(covariances[i][2,2]),))
+        t = (e + (sqrt(covariances[i][2,2]),))
+        f.write(f"E {t[0]} {t[1]} {t[2]} {t[3]}\n")
         # Also, write matched cylinders.
         write_cylinders(f, "W C", matched_ref_cylinders[i])        
 
