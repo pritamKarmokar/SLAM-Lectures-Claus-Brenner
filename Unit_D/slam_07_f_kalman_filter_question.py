@@ -274,6 +274,8 @@ if __name__ == '__main__':
             depth_jump, minimum_valid_distance, cylinder_offset,
             kf.state, scanner_displacement,
             reference_cylinders, max_cylinder_distance)
+        # to use only one observation, (change index from :1 to -1 instead to take only last one)
+        # observations = observations[:1]
         for j in range(len(observations)):
             kf.correct(*observations[j])
 
