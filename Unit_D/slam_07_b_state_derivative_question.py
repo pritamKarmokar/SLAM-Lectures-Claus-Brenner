@@ -33,7 +33,6 @@ class ExtendedKalmanFilter:
         
         # compute alpha and R
         alpha = (r-l) / w
-        R = l / alpha
 
         if r != l:
 
@@ -45,23 +44,24 @@ class ExtendedKalmanFilter:
             # use: m = array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
             # where 1, 2, 3 are the values of the first row of the matrix.
             # Don't forget to return this matrix.
+            R = l / alpha
 
             # compute required elements of the G matrix
-            g12 = (R + w/2)*(cos(theta + alpha) - cos(theta))
-            g22 = (R + w/2)*(sin(theta + alpha) - sin(theta))
+            G12 = (R + w/2)*(cos(theta + alpha) - cos(theta))
+            G22 = (R + w/2)*(sin(theta + alpha) - sin(theta))
 
-            m = array([[1, 0, g12], [0, 1, g22], [0, 0, 1]])  # Replace this.
+            m = array([[1, 0, G12], [0, 1, G22], [0, 0, 1]])  # Replace this.
 
         else:
 
             # --->>> Put your code here.
             # This is for the special case r == l.
             # compute required elements of the G matrix
-            g12 = -l * sin(theta)
-            g22 = l * cos(theta)
+            G12 = -l * sin(theta)
+            G22 = l * cos(theta)
 
             # note the expression looks exactly the same but kept inside if for basic clarity
-            m = array([[1, 0, g12], [0, 1, g22], [0, 0, 1]])  # Replace this.
+            m = array([[1, 0, G12], [0, 1, G22], [0, 0, 1]])  # Replace this.
 
         return m
 

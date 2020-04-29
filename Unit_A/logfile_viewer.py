@@ -285,4 +285,4 @@ if __name__ == '__main__':
     add_file()
 
     root.mainloop()
-    root.destroy()
+    # root.destroy()

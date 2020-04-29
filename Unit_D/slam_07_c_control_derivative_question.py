@@ -30,22 +30,35 @@ class ExtendedKalmanFilter:
     def dg_dcontrol(state, control, w):
         theta = state[2]
         l, r = tuple(control)
+        alpha = (r-l) / w
         if r != l:
 
             # --->>> Put your code here.
             # This is for the case l != r.
             # Note g has 3 components and control has 2, so the result
             # will be a 3x2 (rows x columns) matrix.
-            pass  # Remove this.
+            V11 = ((w*r) / ((r-l)**2)) * (sin(theta+alpha) - sin(theta))  - ((r+l) / (2*(r-l))) * cos(theta+alpha)
+            V21 = ((w*r) / ((r-l)**2)) * (-cos(theta+alpha) + cos(theta)) - ((r+l) / (2*(r-l))) * sin(theta+alpha)
             
+            V12 = -((w*l) / ((r-l)**2)) * (sin(theta+alpha) - sin(theta))  + ((r+l) / (2*(r-l))) * cos(theta+alpha)
+            V22 = -((w*l) / ((r-l)**2)) * (-cos(theta+alpha) + cos(theta)) + ((r+l) / (2*(r-l))) * sin(theta+alpha)
             
         else:
 
             # --->>> Put your code here.
             # This is for the special case l == r.
-            pass  # Remove this.            
+            V11 = (1/2) * (cos(theta) + (l/w) * sin(theta))            
+            V21 = (1/2) * (sin(theta) - (l/w) * cos(theta)) 
 
-        m = array([[1, 2], [3, 4], [5, 6]])  # Remove this.
+            V12 = (1/2) * (cos(theta) - (l/w) * sin(theta))            
+            V22 = (1/2) * (sin(theta) + (l/w) * cos(theta)) 
+
+
+        # dg3_dl and dg3_dr are same for both cases
+        V31 = -1 / w
+        V32 = 1 / w
+
+        m = array([[V11, V12], [V21, V22], [V31, V32]])  # Remove this.
             
         return m
 
@@ -67,7 +80,7 @@ if __name__ == '__main__':
     w = 150.0
 
     # Compute derivative numerically.
-    print "Numeric differentiation dl, dr"
+    print ("Numeric differentiation dl, dr")
     delta = 1e-7
     control_l = array([l + delta, r])
     control_r = array([l, r + delta])
@@ -76,15 +89,15 @@ if __name__ == '__main__':
     dg_dr = (ExtendedKalmanFilter.g(state, control_r, w) -\
              ExtendedKalmanFilter.g(state, control, w)) / delta
     dg_dcontrol_numeric = column_stack([dg_dl, dg_dr])
-    print dg_dcontrol_numeric
+    print (dg_dcontrol_numeric)
 
     # Use the above code to compute the derivative analytically.
-    print "Analytic differentiation dl, dr:"
+    print ("Analytic differentiation dl, dr:")
     dg_dcontrol_analytic = ExtendedKalmanFilter.dg_dcontrol(state, control, w)
-    print dg_dcontrol_analytic
+    print (dg_dcontrol_analytic)
 
     # The difference should be close to zero (depending on the setting of
     # delta, above).
-    print "Difference:"
-    print dg_dcontrol_numeric - dg_dcontrol_analytic
-    print "Seems correct:", allclose(dg_dcontrol_numeric, dg_dcontrol_analytic)
+    print ("Difference:")
+    print (dg_dcontrol_numeric - dg_dcontrol_analytic)
+    print ("Seems correct:", allclose(dg_dcontrol_numeric, dg_dcontrol_analytic))

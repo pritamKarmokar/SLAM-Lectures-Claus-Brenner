@@ -40,16 +40,67 @@ class ExtendedKalmanFilter:
     @staticmethod
     def dg_dstate(state, control, w):
 
-        # --->>> Copy your previous dg_dstate code here.
+        theta = state[2]
+        l, r = control
+        
+        # compute alpha and R
+        alpha = (r-l) / w
 
-        return array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        if r != l:
+
+            R = l / alpha
+            # compute required elements of the G matrix
+            G12 = (R + w/2)*(cos(theta + alpha) - cos(theta))
+            G22 = (R + w/2)*(sin(theta + alpha) - sin(theta))
+
+        else:
+
+            # This is for the special case r == l.
+            # compute required elements of the G matrix
+            G12 = -l * sin(theta)
+            G22 = l * cos(theta)
+
+        m = array([[1, 0, G12], [0, 1, G22], [0, 0, 1]])  
+
+        return m
+
 
     @staticmethod
     def dg_dcontrol(state, control, w):
 
-        # --->>> Copy your previous dg_dcontrol code here.
+        theta = state[2]
+        l, r = tuple(control)
+        alpha = (r-l) / w
+
+        if r != l:
+
+            # This is for the case l != r.
+            # Note g has 3 components and control has 2, so the result
+            # will be a 3x2 (rows x columns) matrix.
+            V11 = ((w*r) / ((r-l)**2)) * (sin(theta+alpha) - sin(theta))  - ((r+l) / (2*(r-l))) * cos(theta+alpha)
+            V21 = ((w*r) / ((r-l)**2)) * (-cos(theta+alpha) + cos(theta)) - ((r+l) / (2*(r-l))) * sin(theta+alpha)
             
-        return array([[1, 2], [3, 4], [5, 6]])
+            V12 = -((w*l) / ((r-l)**2)) * (sin(theta+alpha) - sin(theta))  + ((r+l) / (2*(r-l))) * cos(theta+alpha)
+            V22 = -((w*l) / ((r-l)**2)) * (-cos(theta+alpha) + cos(theta)) + ((r+l) / (2*(r-l))) * sin(theta+alpha)
+            
+        else:
+
+            # This is for the special case l == r.
+            V11 = (1/2) * (cos(theta) + (l/w) * sin(theta))            
+            V21 = (1/2) * (sin(theta) - (l/w) * cos(theta)) 
+
+            V12 = (1/2) * (cos(theta) - (l/w) * sin(theta))            
+            V22 = (1/2) * (sin(theta) + (l/w) * cos(theta)) 
+
+
+        # dg3_dl and dg3_dr are same for both cases
+        V31 = -1 / w
+        V32 = 1 / w
+
+        m = array([[V11, V12], [V21, V22], [V31, V32]])  
+            
+        return m
+
 
     @staticmethod
     def get_error_ellipse(covariance):
@@ -81,7 +132,20 @@ class ExtendedKalmanFilter:
         # Writing A*B instead will give you the element-wise product, which
         # is not intended here.
 
+        # compute control variance matrix
+        sigma_l = (self.control_motion_factor * left)**2 + (self.control_turn_factor * (left-right))**2
+        sigma_r = (self.control_motion_factor * right)**2 + (self.control_turn_factor * (left-right))**2
+        control_covariance = diag([sigma_l, sigma_r])
+        
+        # compute G and V
+        G = self.dg_dstate(self.state, control, self.robot_width)
+        V = self.dg_dcontrol(self.state, control, self.robot_width)
+
+        # computing new covariance matrix
+        self.covariance = dot(dot(G, self.covariance), G.T) + dot(dot(V, control_covariance), V.T)
+
         # state' = g(state, control)
+        self.state = self.g(self.state, control, self.robot_width)
 
         # --->>> Put your code to compute the new self.state here.
 
@@ -125,14 +189,16 @@ if __name__ == '__main__':
 
     # Write all states, all state covariances, and matched cylinders to file.
     f = open("kalman_prediction.txt", "w")
-    for i in xrange(len(states)):
+    for i in range(len(states)):
         # Output the center of the scanner, not the center of the robot.
-        print >> f, "F %f %f %f" % \
-            tuple(states[i] + [scanner_displacement * cos(states[i][2]),
-                               scanner_displacement * sin(states[i][2]),
-                               0.0])
+        t = tuple(states[i] + [scanner_displacement * cos(states[i][2]),
+                            scanner_displacement * sin(states[i][2]),
+                            0.0])
+        f.write(f"F {t[0]} {t[1]} {t[2]}\n")
+
         # Convert covariance matrix to angle stddev1 stddev2 stddev-heading form
         e = ExtendedKalmanFilter.get_error_ellipse(covariances[i])
-        print >> f, "E %f %f %f %f" % (e + (sqrt(covariances[i][2,2]),))
+        t = (e + (sqrt(covariances[i][2,2]),))
+        f.write(f"E {t[0]} {t[1]} {t[2]} {t[3]}\n")
 
     f.close()

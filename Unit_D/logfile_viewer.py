@@ -59,7 +59,7 @@ class Trajectory(DrawableObject):
         N = int(ceil((end_angle - start_angle) / (2 * pi) * N_full))
         N = max(N, 1)
         increment = (end_angle - start_angle) / N
-        for i in xrange(N + 1):
+        for i in range(N + 1):
             a = start_angle + i * increment
             c = cos(a)
             s = sin(a)
@@ -356,4 +356,4 @@ if __name__ == '__main__':
     add_file()
 
     root.mainloop()
-    root.destroy()
+    # root.destroy()
