@@ -55,8 +55,8 @@ if __name__ == '__main__':
     f = open("states_from_ticks.txt", "w")
     for s in states:
         # Output the center of the scanner, not the center of the robot.
-        print >> f, "F %f %f %f" % \
-            tuple(s + [scanner_displacement * cos(s[2]),
-                       scanner_displacement * sin(s[2]),
-                       0.0])
+        t = tuple(s + [scanner_displacement * cos(s[2]),
+                    scanner_displacement * sin(s[2]),
+                    0.0])
+        f.write(f"F {t[0]} {t[1]} {t[2]}\n")
     f.close()

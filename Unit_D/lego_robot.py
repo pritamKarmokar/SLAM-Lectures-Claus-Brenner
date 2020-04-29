@@ -110,7 +110,7 @@ class LegoLogfile(object):
                 if first_filtered_positions:
                     self.filtered_positions = []
                     first_filtered_positions = False
-                self.filtered_positions.append( tuple( map(float, sp[1:])) )
+                self.filtered_positions.append( tuple( list(map(float, sp[1:]))) )
 
             # E is error of filtered trajectory. No time stamp is used.
             # File format: E (angle of main axis)[in radians] std-dev1 std-dev2
@@ -137,7 +137,7 @@ class LegoLogfile(object):
                     self.landmarks = []
                     first_landmarks = False
                 if sp[1] == 'C':
-                    self.landmarks.append( tuple(['C'] + map(float, sp[2:])) )
+                    self.landmarks.append( tuple(['C'] + list(map(float, sp[2:]))) )
                     
             # D is detected landmarks (in each scan).
             # File format: D <type> info...

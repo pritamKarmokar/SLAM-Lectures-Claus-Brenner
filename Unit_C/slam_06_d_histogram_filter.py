@@ -17,7 +17,6 @@ def move(distribution, delta):
 def convolve(a, b):
     """Convolve distribution a and b and return the resulting new distribution."""
 
-    # --->>> Put your code here.
     dist_list = []
 
     for i in range(len(b.values)):

@@ -1,6 +1,7 @@
 # Multiply a distribution by another distribution.
 # 06_c_multiply_distribution
 # Claus Brenner, 26 NOV 2012
+
 from pylab import plot, show
 from distribution import *
 

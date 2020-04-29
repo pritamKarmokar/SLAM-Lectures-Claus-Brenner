@@ -6,10 +6,14 @@ from lego_robot import *
 
 # Find the derivative in scan data, ignoring invalid measurements.
 def compute_derivative(scan, min_dist):
+    """ outputs jumps. list of 0 or +ve or -ve numbers representing scan derivatives """
     jumps = [ 0 ]
     for i in range(1, len(scan) - 1):
+        # compute derivative at i-th scan line, using neighbors
         l = scan[i-1]
         r = scan[i+1]
+
+        # derivatives qualify if scanned lines are big enough. too close -> noise
         if l > min_dist and r > min_dist:
             derivative = (r - l) / 2.0
             jumps.append(derivative)
@@ -37,6 +41,8 @@ def find_cylinders(scan, scan_derivative, jump, min_dist):
         # scanned R
         if on_cylinder and scan_derivative[i] > jump and not scan_derivative[i-1] < -jump:
             on_cylinder = not on_cylinder
+
+            # append the averaged cylinder (ray#, depth) to list
             cylinder_list.append((sum_ray/rays, sum_depth/rays))
 
             # reset sum_ray, sum_depth, rays

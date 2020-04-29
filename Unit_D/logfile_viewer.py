@@ -1,7 +1,7 @@
 # Python routines to inspect a ikg LEGO robot logfile.
 # Author: Claus Brenner, 28 OCT 2012
-from Tkinter import *
-import tkFileDialog
+from tkinter import *
+import tkinter.filedialog as  tkFileDialog
 from lego_robot import *
 from math import sin, cos, pi, ceil
 
@@ -19,10 +19,10 @@ max_scanner_range = 2200.0
 
 class DrawableObject(object):
     def draw(self, at_step):
-        print "To be overwritten - will draw a certain point in time:", at_step
+        print (f"To be overwritten - will draw a certain point in time: {at_step}")
 
     def background_draw(self):
-        print "Background draw."
+        print ("Background draw.")
 
 class Trajectory(DrawableObject):
     def __init__(self, points, canvas,
@@ -205,7 +205,9 @@ class Points(DrawableObject):
 
     def draw(self, at_step):
         if self.cursor_objects:
-            map(self.canvas.delete, self.cursor_objects)
+            # map(self.canvas.delete, self.cursor_objects)
+            for o in self.cursor_objects:
+                self.canvas.delete(o)
             self.cursor_objects = []
         if at_step < len(self.points):
             for c in self.points[at_step]:
